@@ -1870,18 +1870,14 @@ def _query(
                 # The GitHub API returns a single dictionary, instead of
                 # A list of dictionaries. In that case, we can return.
                 return result
-
+            
             ret = result
             complete_result = complete_result + result['dict']
             ret['dict'] = complete_result
 
         else:
-            print("Else: ", result)
             return result
-            # err = result.get("error")
-            # raise CommandExecutionError(f"GitHub Response Error: {err}")
             
-
         try:
             link_info = result.get("headers").get("Link").split(",")[0]
         except AttributeError:
@@ -2065,8 +2061,6 @@ def update_ruleset(profile="github", **kwargs):
         header_dict=kwargs.get('header_dict', None),
         ruleset_params=kwargs.get('ruleset_params', None)
         )
-    
-    print("Params: ", params['ruleset_params'])
 
     if not isinstance(params['ruleset_params'], dict):
         raise TypeError("params need to be a dict")
