@@ -746,13 +746,8 @@ def repo_absent(name, profile="github", **kwargs):
 
 
 def ruleset_absent(
-        name, 
-        ruleset_type, 
-        profile="github",
-        owner=None, 
-        repo_name=None, 
-        org_name=None,
-        **kwargs):
+    name, ruleset_type, profile="github", owner=None, repo_name=None, org_name=None, **kwargs
+):
     """
     Ensure a ruleset is absent
     """
@@ -761,7 +756,7 @@ def ruleset_absent(
 
     if ruleset_type not in ["org", "repo"]:
         raise CommandExecutionError
-    
+
     if ruleset_type == "repo":
         kwargs.update({"owner": owner, "repo_name": repo_name, "ruleset_type": ruleset_type})
     if ruleset_type == "org":
@@ -774,12 +769,12 @@ def ruleset_absent(
 
     if rulesets:
         for ruleset in rulesets:
-            if ruleset['name'] == name:
+            if ruleset["name"] == name:
                 if __opts__["test"]:
                     ret["comment"] = f"Ruleset {name} will be deleted"
                     ret["result"] = None
                     return ret
-                
+
                 kwargs.update({"ruleset_id": ruleset["id"]})
                 result = __salt__["github.delete_ruleset"](profile, **kwargs)
 
@@ -792,21 +787,22 @@ def ruleset_absent(
                 else:
                     ret["comment"] = f"Failed to delete ruleset {name}"
                     ret["result"] = False
-            
+
     ret["comment"] = f"Ruleset {name} does not exist"
     ret["result"] = True
     return ret
 
 
 def ruleset_present(
-        name,
-        ruleset_type,
-        profile="github",
-        owner=None,
-        repo_name=None,
-        org_name=None,
-        ruleset_params=None,
-        **kwargs):
+    name,
+    ruleset_type,
+    profile="github",
+    owner=None,
+    repo_name=None,
+    org_name=None,
+    ruleset_params=None,
+    **kwargs,
+):
     """
     Ensure a ruleset is present
     """
@@ -814,54 +810,52 @@ def ruleset_present(
 
     if ruleset_type not in ["org", "repo"]:
         raise CommandExecutionError
-    
-    if ruleset_type == "repo":
-        kwargs.update({"owner": owner, "repo_name": repo_name, 'ruleset_type': ruleset_type})
-    if ruleset_type == "org":
-        kwargs.update({"org_name": org_name, 'ruleset_type': ruleset_type})
 
-    ruleset_params['name'] = name
+    if ruleset_type == "repo":
+        kwargs.update({"owner": owner, "repo_name": repo_name, "ruleset_type": ruleset_type})
+    if ruleset_type == "org":
+        kwargs.update({"org_name": org_name, "ruleset_type": ruleset_type})
+
+    ruleset_params["name"] = name
 
     rulesets = __salt__["github.list_rulesets"](profile, **kwargs)
 
     if rulesets:
         for ruleset in rulesets:
-            if ruleset['name'] == name:
+            if ruleset["name"] == name:
                 kwargs.update({"ruleset_id": ruleset["id"]})
                 ruleset_info = __salt__["github.get_ruleset"](profile, **kwargs)
-                if ruleset_info['id']:
+                if ruleset_info["id"]:
                     for key in ruleset_info and ruleset_params:
                         if ruleset_info[key] != ruleset_params[key]:
                             changes = {
-                                    "old": f"Rulset properties were {ruleset_info}",
-                                    "new": f"Ruleset properties (that changed) are {ruleset_params}"}
-                            ret['changes'] = changes
+                                "old": f"Rulset properties were {ruleset_info}",
+                                "new": f"Ruleset properties (that changed) are {ruleset_params}",
+                            }
+                            ret["changes"] = changes
                             if __opts__["test"]:
-                                ret['result'] = None
+                                ret["result"] = None
                             else:
                                 kwargs.update({"ruleset_params": ruleset_params})
                                 result = __salt__["github.update_ruleset"](profile, **kwargs)
                                 if not result.get("id"):
-                                    ret['changes'] = {}
-                                    ret['comment'] = "Could not update ruleset"
+                                    ret["changes"] = {}
+                                    ret["comment"] = "Could not update ruleset"
                             return ret
-                    ret['comment'] = "ruleset present"
+                    ret["comment"] = "ruleset present"
                     return ret
                 else:
                     if not ruleset_info:
                         raise CommandExecutionError("error getting ruleset info")
-    
-    changes = {
-            "old": f"No existing ruleset found",
-            "new": f"Ruleset created"}
-    ret['changes'] = changes
+
+    changes = {"old": "No existing ruleset found", "new": "Ruleset created"}
+    ret["changes"] = changes
     if __opts__["test"]:
-        ret['result'] = None
+        ret["result"] = None
     else:
         result = __salt__["github.add_ruleset"](profile, ruleset_params=ruleset_params, **kwargs)
         if not result.get("id"):
-            ret['changes'] = {}
-            ret['result'] = False
-            ret['comment'] = result['comment']
+            ret["changes"] = {}
+            ret["result"] = False
+            ret["comment"] = result["comment"]
     return ret
-
